@@ -1,3 +1,6 @@
+import igraph
+from igraph import *
+from queue import *
 
 code_table = {}
 
@@ -7,6 +10,7 @@ class Tree(object):
         self.value = 0   #frequency
         self.right = None
         self.left = None
+        self.index = 0
 
     def __lt__(self, other):
         if(self.value < other.value):
@@ -81,11 +85,46 @@ def print_node(tree, tabs):
     else:
         print(str('\t' * tabs) + str(tree.key) +" : " + str(tree.value))
 
-def print_tree(tree, level=0):
+
+def print_tree_console(tree, level=0):
     if(tree is not None):
         print_node(tree, level)
-        print_tree(tree.left, level+1)
-        print_tree(tree.right, level+1)
+        print_tree_console(tree.left, level+1)
+        print_tree_console(tree.right, level+1)
+
+
+## Display tree according to Reingold Tilford algorithm
+def print_tree(tree, level=0):
+    edges = [] ## List of pair of indexes
+    labels = [] ## Values of nodes, TODO add characters
+    index = 0
+    tree.index = index ## Root index is 0
+    index += 1
+    labels.append(str(tree.value))
+    nodesToVisit = Queue()
+    nodesToVisit.put(tree)
+    ## BFS
+    while(not nodesToVisit.empty()):
+        visitedNode = nodesToVisit.get()
+        leftChild = visitedNode.left
+        rightChild = visitedNode.right
+        if(leftChild is not None):
+            leftChild.index = index
+            index += 1
+            edges.append((visitedNode.index, leftChild.index))
+            labels.append(str(leftChild.value) + "  " + str(leftChild.key))
+            nodesToVisit.put(leftChild)
+        if(rightChild is not None):
+            rightChild.index = index
+            index += 1
+            edges.append((visitedNode.index, rightChild.index))
+            labels.append(str(rightChild.value) + "  " + str(rightChild.key))
+            nodesToVisit.put(rightChild)
+    g = Graph(edges)
+    g.vs["label"] = labels
+    layout = g.layout_reingold_tilford( mode="all", root=[0])
+    plot(g, layout = layout)
+
 
 
 print("Inserte nombre de archivo a codificar: ")
